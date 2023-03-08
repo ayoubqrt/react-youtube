@@ -67,6 +67,16 @@ function shouldUpdatePlayer(prevProps: YouTubeProps, props: YouTubeProps) {
   );
 }
 
+const MATCH_URL_YOUTUBE = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|v\/|watch\/|watch\?v=|watch\?.+&v=|shorts\/|live\/))((\w|-){11})|youtube\.com\/playlist\?list=|youtube\.com\/user\//
+const MATCH_PLAYLIST = /[?&](?:list|channel)=([a-zA-Z0-9_-]+)/
+
+function getID (url) {
+  if (!url || url instanceof Array || MATCH_PLAYLIST.test(url)) {
+    return null
+  }
+  return url.match(MATCH_URL_YOUTUBE)[1]
+}
+
 type YoutubePlayerCueVideoOptions = {
   videoId: string;
   startSeconds?: number;
@@ -335,7 +345,7 @@ class YouTube extends React.Component<YouTubeProps> {
     const playerOpts: Options = {
       ...this.props.opts,
       // preload the `videoId` video if one is already given
-      videoId: this.props.videoId,
+      videoId: getID(this.props.videoId),
     };
     this.internalPlayer = youTubePlayer(this.container!, playerOpts);
     // attach event handlers
@@ -392,7 +402,7 @@ class YouTube extends React.Component<YouTubeProps> {
    * YouTube Player API methods to update the video.
    */
   updateVideo = () => {
-    if (typeof this.props.videoId === 'undefined' || this.props.videoId === null) {
+    if (typeof getID(this.props.videoId) === 'undefined' || getID(this.props.videoId) === null) {
       this.internalPlayer?.stopVideo();
       return;
     }
@@ -400,7 +410,7 @@ class YouTube extends React.Component<YouTubeProps> {
     // set queueing options
     let autoplay = false;
     const opts: YoutubePlayerCueVideoOptions = {
-      videoId: this.props.videoId,
+      videoId: getID(this.props.videoId),
     };
 
     if (this.props.opts?.playerVars) {
